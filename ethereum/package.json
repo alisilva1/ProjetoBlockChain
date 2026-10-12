@@ -1,14 +1,19 @@
 {
-  "name": "ethereum",
+  "name": "projeto-blockchain-ethereum",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Subprojeto Ethereum (Hardhat 3 + Viem) do ProjetoBlockChain",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "test:solidity": "hardhat test solidity",
+    "test:nodejs": "hardhat test nodejs",
+    "node": "hardhat node",
+    "deploy:local": "hardhat ignition deploy ignition/modules/Counter.ts",
+    "clean": "hardhat clean"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.1.8",
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.7",
@@ -17,6 +22,5 @@
     "hardhat": "^3.19.0",
     "typescript": "~6.0.3",
     "viem": "^2.57.5"
-  },
-  "type": "module"
+  }
 }

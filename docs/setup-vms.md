@@ -393,20 +393,21 @@ Economiza recursos — você acessa tudo pelo VS Code via SSH.
 > node --version   # v22.x.x
 > ```
 
-```bash
-mkdir -p ~/projetos/ethereum
-cd ~/projetos/ethereum
-npx hardhat --init
-```
-
-O `npx hardhat --init` (Hardhat 3) cria o `package.json` e instala as dependências do projeto sozinho — não é preciso `npm init` nem instalação global. Responda o assistente interativo (versão do Hardhat, pasta, tipo de projeto) e aceite instalar as dependências.
-
-Teste:
+O projeto Hardhat já está no repositório [ProjetoBlockChain](https://github.com/alisilva1/ProjetoBlockChain), na pasta `ethereum/`. Em uma VM nova, configure o acesso ao GitHub e clone:
 
 ```bash
-npx hardhat --version
-npx hardhat test
+ssh-keygen -t ed25519 -C "vm-ethereum"     # Enter em tudo
+cat ~/.ssh/id_ed25519.pub                  # cadastrar em github.com/settings/ssh/new
+ssh -T git@github.com                      # deve responder "Hi alisilva1!"
+
+cd ~/projetos
+git clone git@github.com:alisilva1/ProjetoBlockChain.git
+cd ProjetoBlockChain/ethereum
+npm ci
+npm test
 ```
+
+> Como o projeto foi criado: `npx hardhat --init` (Hardhat 3) → pasta `.` → "A TypeScript Hardhat project using Node Test Runner and Viem" → instalar dependências. Não é preciso `npm init` nem instalação global.
 
 Snapshot após configurar:
 ```

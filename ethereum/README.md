@@ -1,57 +1,60 @@
-# Sample Hardhat 3 Project (`node:test` and `viem`)
+# Ethereum — Hardhat 3
 
-This project showcases a Hardhat 3 project using the native Node.js test runner (`node:test`) and the `viem` library for Ethereum interactions.
+Subprojeto Ethereum do ProjetoBlockChain, desenvolvido na **vm-ethereum** (192.168.56.10).
 
-To learn more about Hardhat 3, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3](https://hardhat.org/hardhat3-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+- Hardhat 3 com TypeScript, Viem e Node Test Runner (`node:test`)
+- Testes em Solidity (compatíveis com Foundry) e em TypeScript
+- Deploy com Hardhat Ignition
+- Requer **Node.js 22+**
 
-## Project Overview
+## Instalação
 
-This example project includes:
+Depois de clonar o repositório:
 
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using [`node:test`](nodejs.org/api/test.html), the new Node.js native test runner, and [`viem`](https://viem.sh/).
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
-
-## Usage
-
-### Running Tests
-
-To run all the tests in the project, execute the following command:
-
-```shell
-npx hardhat test
+```bash
+cd ethereum
+npm ci
 ```
 
-You can also selectively run the Solidity or `node:test` tests:
+## Comandos
 
-```shell
-npx hardhat test solidity
-npx hardhat test nodejs
+| Comando | O que faz |
+|---|---|
+| `npm run compile` | Compila os contratos |
+| `npm test` | Roda todos os testes (Solidity + TypeScript) |
+| `npm run test:solidity` | Só os testes Solidity (`contracts/*.t.sol`) |
+| `npm run test:nodejs` | Só os testes TypeScript (`test/`) |
+| `npm run node` | Sobe uma blockchain local em `127.0.0.1:8545` |
+| `npm run deploy:local` | Faz deploy do `Counter` numa rede simulada |
+| `npm run clean` | Apaga `artifacts/` e `cache/` |
+
+## Estrutura
+
+```
+ethereum/
+├── contracts/          # Contratos Solidity e testes .t.sol
+├── test/               # Testes TypeScript (node:test + viem)
+├── ignition/modules/   # Módulos de deploy (Hardhat Ignition)
+├── scripts/            # Scripts avulsos
+└── hardhat.config.ts   # Configuração (compilador, redes)
 ```
 
-### Make a deployment to Sepolia
+## Redes configuradas
 
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
+| Rede | Tipo | Uso |
+|---|---|---|
+| `hardhatMainnet` | simulada (L1) | testes locais |
+| `hardhatOp` | simulada (OP Stack) | testes locais de L2 |
+| `sepolia` | HTTP | testnet pública |
 
-To run the deployment to a local chain:
+### Deploy na Sepolia
 
-```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
-```
+As credenciais **não** ficam em arquivo nem no git — são guardadas no keystore criptografado do Hardhat:
 
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
-
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
-
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
-
-```shell
+```bash
+npx hardhat keystore set SEPOLIA_RPC_URL
 npx hardhat keystore set SEPOLIA_PRIVATE_KEY
-```
-
-After setting the variable, you can run the deployment with the Sepolia network:
-
-```shell
 npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
 ```
+
+> ⚠️ Use uma carteira exclusiva de testes. Nunca coloque chaves privadas em `.env` versionado ou no código.
