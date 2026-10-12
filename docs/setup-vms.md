@@ -162,6 +162,16 @@ sudo apt update && sudo apt upgrade -y
 
 > Na tela "Daemons using outdated libraries" mantenha as seleções padrão e pressione OK.
 
+### Usar o disco inteiro (LVM)
+
+O instalador do Ubuntu com LVM usa só metade do disco (≈19G de 40G). As imagens Docker do Cartesi precisam de espaço, então expanda:
+
+```bash
+sudo lvextend -l +100%FREE /dev/ubuntu-vg/ubuntu-lv
+sudo resize2fs /dev/mapper/ubuntu--vg-ubuntu--lv
+df -h /   # deve mostrar ≈38G
+```
+
 ### Instalar ferramentas essenciais
 
 ```bash
@@ -381,7 +391,7 @@ Economiza recursos — você acessa tudo pelo VS Code via SSH.
 | VM | O que instalar |
 |---|---|
 | vm-ethereum | Hardhat 3 (Node 22+): `npx hardhat --init` |
-| vm-cartesi | Docker Engine + Cartesi CLI |
+| vm-cartesi | Docker CE + Cartesi CLI + `cartesi build` |
 
 ### vm-ethereum
 
@@ -417,19 +427,59 @@ Descrição: VM Ethereum pronta com Hardhat
 
 ### vm-cartesi
 
+#### Docker Engine (repositório oficial)
+
+Use o Docker CE oficial (traz Compose v2 e Buildx com suporte a `linux/riscv64`), não o pacote `docker.io` do Ubuntu:
+
 ```bash
-sudo apt install -y docker.io docker-compose-v2
+sudo apt install -y ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable" | sudo tee /etc/apt/sources.list.d/docker.list
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 sudo usermod -aG docker $USER
 newgrp docker
-ls /dev/kvm          # deve retornar /dev/kvm — essencial para Cartesi
-npm install -g @cartesi/cli
-mkdir -p ~/projetos/cartesi
+docker run --rm hello-world
 ```
+
+#### Cartesi CLI
+
+```bash
+npm install -g @cartesi/cli
+cartesi doctor        # deve responder "Your system is ready."
+```
+
+#### Repositório e aplicação
+
+A aplicação Cartesi (TypeScript) já está no repositório, na pasta `cartesi/`. Configure o acesso ao GitHub e clone:
+
+```bash
+ssh-keygen -t ed25519 -C "vm-cartesi"      # Enter em tudo
+cat ~/.ssh/id_ed25519.pub                  # cadastrar em github.com/settings/ssh/new
+ssh -T git@github.com                      # deve responder "Hi alisilva1!"
+
+cd ~/projetos
+git clone git@github.com:alisilva1/ProjetoBlockChain.git
+cd ProjetoBlockChain/cartesi
+cartesi build         # ~4 min na primeira vez
+cartesi run           # sobe o nó local (Ctrl+C para parar)
+```
+
+Com o nó rodando, em outro terminal, envie um input de teste (escolha **Mnemonic** e a conta padrão quando perguntado):
+
+```bash
+cartesi send generic --input "ola cartesi" --input-encoding string
+```
+
+O log do `cartesi run` deve mostrar `Received advance request data` com o payload enviado.
+
+> Como a aplicação foi criada: `cartesi create <nome> --template typescript` (Cartesi CLI 1.5 / SDK 0.9).
 
 Snapshot após configurar:
 ```
 Nome: cartesi-inicial
-Descrição: VM Cartesi pronta com Docker e Cartesi CLI
+Descrição: VM Cartesi pronta com Docker CE, Cartesi CLI e aplicação TypeScript
 ```
 
 ---
@@ -445,3 +495,5 @@ Descrição: VM Cartesi pronta com Docker e Cartesi CLI
 | Verificar Node | `node --version` |
 | Verificar Docker | `docker --version` |
 | Verificar KVM | `ls /dev/kvm` |
+| Ver espaço em disco | `df -h /` |
+| Verificar ambiente Cartesi | `cartesi doctor` |
