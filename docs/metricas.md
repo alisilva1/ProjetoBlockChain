@@ -1,13 +1,38 @@
-# Métricas de comparação — Ethereum × Cartesi
+# Métricas de comparação entre Ethereum e Cartesi
 
-| Métrica | Unidade | Como medir no Ethereum | Como medir no Cartesi |
-|---|---|---|---|
-| Latência | ms | Tempo entre o envio da transação (`sendTransaction`) e o recebimento do recibo (`waitForTransactionReceipt`) no cliente viem | Tempo entre o envio do input ao `InputBox` (`cartesi send`) e o momento em que o notice correspondente aparece na API GraphQL do nó |
-| Throughput | tx/s (transações confirmadas por segundo) | Número de recibos obtidos dividido pelo tempo total de um lote de transações | Número de notices disponíveis dividido pelo tempo total de um lote de inputs |
-| Custo em gas | gas (e ETH = gas × `effectiveGasPrice`) | Campo `gasUsed` do recibo de cada transação ao contrato | Campo `gasUsed` do recibo da transação `addInput` no `InputBox` (o processamento dentro da máquina Cartesi não consome gas); somar o gas de execução de vouchers, se houver |
-| CPU/RAM | % de CPU e MB de RAM | Uso do processo do nó Hardhat durante o teste (`pidstat -u -r -p <pid> 1` ou `htop`) | Uso dos contêineres do nó Cartesi durante o teste (`docker stats --no-stream`, amostrado a cada 1 s) |
+Este documento descreve as métricas usadas para comparar as duas arquiteturas e explica como cada uma é medida. Todas partem do mesmo princípio: uma operação só entra na conta depois de confirmada, conforme o critério definido ao final.
 
-## Critério de “confirmado”
+## Visão geral
 
-- **Ethereum:** uma operação é considerada confirmada quando o recibo da transação está disponível, com `status = success`, indicando que ela foi incluída em um bloco.
-- **Cartesi:** uma operação é considerada confirmada quando o notice gerado pela aplicação para aquele input está disponível para consulta na API GraphQL do nó.
+| Métrica | Unidade | O que representa |
+|---|---|---|
+| Latência | milissegundos (ms) | Tempo entre o envio de uma operação e a sua confirmação |
+| Throughput | transações por segundo (tx/s) | Quantidade de operações confirmadas por unidade de tempo |
+| Custo em gas | gas (convertido em ETH) | Custo cobrado na rede para registrar a operação |
+| CPU e RAM | % de CPU e MB de RAM | Recursos consumidos pelo nó durante a execução |
+
+## Como cada métrica é medida
+
+### Latência
+
+- **Ethereum:** o cronômetro começa quando a transação é enviada ao contrato e para quando o recibo é recebido pelo cliente.
+- **Cartesi:** o cronômetro começa quando o input é enviado ao contrato `InputBox` e para quando o notice correspondente aparece na API GraphQL do nó.
+
+### Throughput
+
+- **Ethereum:** envia-se um lote de transações e divide-se o número de recibos obtidos pelo tempo total do lote.
+- **Cartesi:** envia-se um lote de inputs e divide-se o número de notices disponíveis pelo tempo total do lote.
+
+### Custo em gas
+
+- **Ethereum:** usa-se o campo `gasUsed` do recibo de cada transação. Para obter o valor em ETH, multiplica-se esse número pelo `effectiveGasPrice`.
+- **Cartesi:** usa-se o `gasUsed` da transação que envia o input ao `InputBox`. O processamento dentro da máquina Cartesi acontece fora da cadeia e não consome gas. Se a aplicação gerar vouchers, o gas da execução deles também entra na soma.
+
+### CPU e RAM
+
+- **Ethereum:** acompanha-se o processo do nó Hardhat durante o teste, com `pidstat -u -r -p <pid> 1` ou `htop`.
+- **Cartesi:** acompanham-se os contêineres do nó durante o teste, com `docker stats` amostrado a cada segundo.
+
+## O que conta como “confirmado”
+
+No Ethereum, uma operação está confirmada quando o recibo da transação fica disponível com status de sucesso, o que indica que ela foi incluída em um bloco. No Cartesi, uma operação está confirmada quando o notice gerado pela aplicação para aquele input pode ser consultado na API GraphQL do nó.
