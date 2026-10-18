@@ -68,6 +68,30 @@ describe("Loteria", async function () {
     assert.equal(await loteria.read.precoBilhete(), PRECO);
   });
 
+  it("remove CNPJ somente pelo owner e mantem os bilhetes ja gerados", async function () {
+    const loteria = await deployComLoja();
+    await loteria.write.registrarNota([CNPJ, "chave-1", 2500n], { account: alice.account });
+
+    await viem.assertions.revertWith(
+      loteria.write.removerCnpj([CNPJ], { account: alice.account }),
+      "somente owner",
+    );
+    await viem.assertions.revertWith(loteria.write.removerCnpj([CNPJ_ZEROS]), "loja nao participa");
+
+    await loteria.write.removerCnpj([CNPJ]);
+    assert.equal(await loteria.read.cnpjParticipante([CNPJ]), false);
+    await viem.assertions.revertWith(
+      loteria.write.registrarNota([CNPJ, "chave-2", 2500n], { account: alice.account }),
+      "loja nao participa",
+    );
+    assert.equal(await loteria.read.totalBilhetes(), 2n);
+    assert.equal(await loteria.read.bilhetesDe([alice.account.address]), 2n);
+
+    await loteria.write.cadastrarCnpj([CNPJ]);
+    await loteria.write.registrarNota([CNPJ, "chave-2", 2500n], { account: alice.account });
+    assert.equal(await loteria.read.totalBilhetes(), 4n);
+  });
+
   it("gera 2 bilhetes para uma nota de R$ 25 e bloqueia nota repetida", async function () {
     const loteria = await deployComLoja();
 

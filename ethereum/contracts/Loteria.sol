@@ -36,6 +36,12 @@ contract Loteria {
     cnpjParticipante[cnpj] = true;
   }
 
+  // Bilhetes de notas ja registradas continuam valendo.
+  function removerCnpj(uint64 cnpj) external somenteOwner {
+    require(cnpjParticipante[cnpj], "loja nao participa");
+    delete cnpjParticipante[cnpj];
+  }
+
   function definirPreco(uint256 centavos) external somenteOwner {
     require(centavos > 0, "preco invalido");
     precoBilhete = centavos;
